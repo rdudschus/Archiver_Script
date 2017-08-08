@@ -106,7 +106,7 @@ class EpicsArchive(object):
         dt_objs = sorted(interactive_args(start, end, unit))
         xarr = self._data.get(pvs, dt_objs[0], dt_objs[1], chunk=chunk)
         if xarray:
-            return xarr
+            return xarr.to_dataframe()
         raise NotImplementedError()
 
     def _expand_pvnames(self, pvname):
