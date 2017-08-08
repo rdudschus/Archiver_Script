@@ -11,7 +11,8 @@ def stats(lst):
     sd_s = sum(lst1)
     sd = np.sqrt(sd_s / l)
     v = sd**2
-    print ("""Mean:                             {0:<}
+    print ("""
+Mean:               {0:<}
 Standard Deviation: {1:<}
 Variance:           {2:<}""".format(m,sd,v)
 )
