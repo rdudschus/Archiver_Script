@@ -5,7 +5,6 @@ interactive.py defines ipython archive interface
 import datetime as dt
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 import functions
 import itertools
 import time
@@ -70,8 +69,6 @@ date_args = doc_sub_txt(date_args,
     units_rule=units_rule)
 interactive_args = doc_sub_txt(interactive_args, date_args=date_args)
 
-
-
 class EpicsArchive(object):
     """
     Interactive interface to an Archive Appliance
@@ -89,7 +86,6 @@ class EpicsArchive(object):
         """
         self._data = data.ArchiveData(hostname, data_port)
         self._mgmt = mgmt.ArchiveMgmt(hostname, mgmt_port)
-
 
     @doc_sub(args=interactive_args)
     def get(self, pvname=None, start=30, end=None, unit="days", chunk=False, xarray=False):
@@ -133,59 +129,83 @@ class EpicsArchive(object):
     @doc_sub(args=interactive_args)
     def prints(self, pvname=None, start=30, end=None, unit="days", chunk=False):
         """
-       	Print timeseries data from the archiver.
+        Print timeseries data from the archiver.
 
-       	Parameters
-       	---------
-       	{args}
-       	"""
-
+        Parameters
+        ---------
+        {args}
+        """
         xarr = self.get(pvname=pvname, start=start, end=end, unit=unit, chunk=chunk, xarray=True)
         print_xarray(xarr, "vals")
 
-    def search(self, glob, do_print=True):
-        return self._mgmt.search_pvs(glob, do_print=do_print)
+    @doc_sub(args=interactive_args)
+    def plot(self, pvname=None, start=30, end=None, unit="days", chunk=False):
+        """
+        Plot timeseries data from the archiver in a new figure.
 
-    search.__doc__=mgmt.ArchiveMgmt.search_pvs.__doc__
+        Parameters
+        ----------
+        {args}
 
+        Returns
+        -------
+        plot_handle
+        """
+        xarr = self.get(pvname=pvname, start=start, end=end, unit=unit, chunk=chunk, xarray=True)
+        #print (xarr)
+        df = xarr.to_dataframe()
+        #return df
+        values = df[pvname]['vals']
+        sevrs = df[pvname]['sevr']
+        #return values
+        dft = xarr['time'].to_dataframe()['time']
+        #return xarr.to_dataframe()        
+        #return xarr# DOING test_plot = arch.plot("pvname") --> test_plot.to_dataframe yeilds the same Pandas dataframe!
 
-    def stats(self, pvname=None, start=10, end=None, unit="seconds", chunk=False):
-        M = int(input("How many minutes? "))
-        N = M*6
+        #plt.plot(sevrs, values)
+        #plt.scatter(sevrs, values)
+        plt.plot_date(dft, values, linestyle='solid', marker='None')
+        plt.title(pvname)
+        plt.xlabel(unit)
+        plt.xticks(rotation=60)
+        plt.ylabel('vals')
+        plt.show()
+
+    def check(self, pvname=None, start=10, end=None, unit="seconds", chunk=False):
+        xarr = self.get(pvname=pvname, start=start, end=end, unit=unit, chunk=chunk, xarray=True)
+        df = xarr.to_dataframe()[pvname[0]]['vals']
+        tm = xarr['time'].to_dataframe()['time']
+        print (df)
+        print (functions.stats(df))
+        plt.plot_date(tm, df, linestyle='solid', marker='None')
+        plt.title(pvname)
+        plt.xlabel(unit)
+        plt.xticks(rotation=60)
+        plt.ylabel('vals')
+        plt.show()
+
+    def repeat(self, pvname=None, start=10, end=None, unit="seconds", chunk=False):
+        N = int(input("How many repeats? "))
+        D = int(input("Length of delay? "))
         for _ in itertools.repeat(None, N):
             xarr = self.get(pvname=pvname, start=start, end=end, unit=unit, chunk=chunk, xarray=True)
-            tm = xarr[1]['time'].to_dataframe()['time']
-            df = xarr[1].to_dataframe()[pvname[1]]['vals']
-            th = xarr[0].to_dataframe()[pvname[0]]['vals'][-1]
-            lst = []#LIST THAT CONTAINS DIFFERENCE OF TWO PV'S
-            lst1 = []#LIST FOR STANDARD DEVIATION
-            for i in df:
-                lst.append(xarr[0].to_dataframe()[pvname[0]]['vals'][-1] - i)
-
-            m_rbv = sum(df)/len(df)
-            m_d = sum(lst)/len(lst)
-           
-            for i in lst:
-                lst1.append((i-m_d)**2)
-            sd_s = sum(lst1)
-            sd = np.sqrt(sd_s / len(lst))
-
+            df = xarr.to_dataframe()[pvname]['vals']
+            tm = xarr['time'].to_dataframe()['time']
+            print (df)
+            print (functions.stats(df))
             plt.plot_date(tm, df, linestyle='solid', marker='None')
-            plt.title(pvname[1])
+            plt.title(pvname)
             plt.xlabel(unit)
             plt.xticks(rotation=60)
             plt.ylabel('vals')
             plt.show()
+            time.sleep(D)            
 
 
-            print("""
-Mirror Position should be:  {0}
-Mean of Mirror Position:    {1}
-Mean of Deviation:          {2}
-Standard Deviation:         {3}""".format(th , round(m_rbv, 3), round(m_d, 3), round(sd, 3)))
 
-            time.sleep(10)#PAUSES FOR 10 SECONDS -- GETS 10s of data, pause 10s then next 10s of data(allows 10s of data to be archive before calling it)
-            
+    def search(self, glob, do_print=True):
+        return self._mgmt.search_pvs(glob, do_print=do_print)
+    search.__doc__ = mgmt.ArchiveMgmt.search_pvs.__doc__
 
 @doc_sub(date_args=date_args)
 def interactive_args(start, end, unit):

@@ -105,10 +105,7 @@ class ArchiveData(object):
             arrays = []
             for pv in pvs:
                 arrays.append(self.get(pv, start, end, chunk=chunk))
-            if merge:
-                return xr.merge(arrays)
-            else:
-                return arrays
+            return arrays
 
     @doc_sub(args=url_args, raw=raw_doc)
     def get_raw(self, pv, start, end, chunk=False):

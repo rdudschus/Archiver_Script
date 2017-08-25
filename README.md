@@ -1,12 +1,11 @@
 # How to Use
 
-- import functions
-- from archapp.interactive import EpicsArchive
-- Create an object calling the EpicsArchive class --> arch = EpicsArchive()
-- To pull data from the archiver, use the 'get' function in EpicsArchive
-	   data = arch.get("pv name" or ["pv1","pv2",...], start, end, xarray=True)
-  Calling data returns a Pandas Dataframe of the PV's vals, severity, status.
-     start and end units are days
-- To get the vals --> data['pv name']['vals']
-	Use this in functions.stats to get the mean, standard deviation, and variance.
-		functions.stats(data['pv name']['vals'])
+- Navigate to Archiver_Script directory; you should see archapp, Archive_Script.ipynb and README.md
+
+- call jupyter notebook in terminal
+
+- Once in jupyter notebook, open Archive_Script.ipynb. All that is needed to run all of the cells
+
+- When prompted to enter how many minutes it should run, only enter positive integers and not zero.
+
+- the function mainly being used is in Archive_Script/archapp in interactive.py. Go in the EpicsArchive class.
